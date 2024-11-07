@@ -1,0 +1,29 @@
+# USERS
+POST 		/users					controllers.UserController.register()
+POST		/users/sessions			controllers.UserController.login()
+
+
+# GROUPS
+
+
+
+# MEMBERS
+
+
+
+# INVITES
+
+
+
+# TASKS
+
+
+
+# TASKS NOTIFS
+
+
+
+
+
+#~~
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
