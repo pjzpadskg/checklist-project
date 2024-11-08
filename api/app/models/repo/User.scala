@@ -1,7 +1,6 @@
 package models.repo
 
 import java.util.UUID
-import java.time.LocalDateTime
 import javax.inject._
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.PostgresProfile

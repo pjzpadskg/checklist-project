@@ -39,4 +39,6 @@ extends BaseController with I18nSupport {
       }
     ).recover{ case x: Exception => InternalServerError(x.getMessage) }
   }
+
+  def logout() = Action { implicit request: Request[AnyContent] => Ok.withNewSession }
 }

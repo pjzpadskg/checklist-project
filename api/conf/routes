@@ -1,19 +1,23 @@
 # USERS
-POST 		/users					controllers.UserController.register()
-POST		/users/sessions			controllers.UserController.login()
-
+POST    /users              controllers.UserController.register()
+POST    /users/sessions     controllers.UserController.login()
+DELETE  /users/sessions     controllers.UserController.logout()
 
 # GROUPS
-
-
+GET     /groups             controllers.GroupController.get()
+POST    /groups             controllers.GroupController.create()
+DELETE  /groups             controllers.GroupController.delete()
 
 # MEMBERS
-
-
+GET     /members/:id        controllers.MemberController.get(id)
+PUT     /members            controllers.MemberController.update()
+POST    /members            controllers.MemberController.add()
+DELETE  /members            controllers.MemberController.delete()
 
 # INVITES
-
-
+GET     /invites            controllers.InviteController.get()
+POST    /invites            controllers.InviteController.create()
+DELETE  /invites            controllers.InviteController.delete()
 
 # TASKS
 
