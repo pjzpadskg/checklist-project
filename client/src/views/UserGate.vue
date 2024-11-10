@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import ULoginForm from '@/components/ULoginForm.vue'
 import URegisterForm from '@/components/URegisterForm.vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user.ts'
 
-const isLogin = ref<boolean>(false)
+const router = useRouter()
+const userStore = useUserStore()
+const isLogin = ref<boolean>(true)
+
+onMounted(() => {
+  if (userStore.isAuth) router.push('/home')
+})
 </script>
 
 <template>
   <main class="h-screen w-screen flex flex-row justify-center items-center">
     <div class="flex flex-col w-1/3 items-center">
       <img src="/checkme.gif" class="w-64 py-8" />
-      <h1 class="text-3xl text-center">CheckMe</h1>
+      <h1 class="text-5xl text-center">CheckMe</h1>
       <p class="text-sm mt-2 text-center">
         Organize your tasks. <br />
         Real time.

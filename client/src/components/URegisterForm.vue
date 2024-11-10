@@ -4,34 +4,49 @@ import { fetchApi, ssoConfig } from '@/utils/Helpers'
 import { decodeCredential } from 'vue3-google-login'
 import { useUserStore } from '@/stores/user.ts'
 
+const success = ref(false)
 const userStore = useUserStore()
 
 const payload = ref({ email: '', password: '', name: '' })
-const { execute, error, data } = fetchApi('/users').post(payload)
+const { isFetching, execute, error } = fetchApi('/users').post(payload)
 async function register(): void {
-  // await execute()
+  await execute()
   if (!error.value) {
-    // make a personal group for user
-    // create group
+    success.value = true
+    userStore.createGroup('Personal Tasks', payload.value.email)
   } else {
+    success.value = false
     console.log(error.value)
   }
   payload.value = { email: '', password: '', name: '' }
 }
 
-async function googleRegister(response: any): void {
+async function googleRegister(response: { credential: string }): void {
+  console.log(typeof response)
   try {
     const { email, name, sub } = decodeCredential(response.credential)
     payload.value = { email, password: sub, name }
     await register()
   } catch (err) {
+    console.log(err)
     payload.value = { email: '', password: '', name: '' }
   }
 }
 </script>
 
 <template>
-  <h2 class="text-2xl font-semibold text-center">Register</h2>
+  <h2 class="text-3xl mb-4 font-semibold text-center">Register</h2>
+  <h3 v-if="isFetching" class="text-center mb-4">Hang on, we're setting things up for you.</h3>
+  <h3
+    v-if="!error && !payload.email && success"
+    class="text-l text-green-700 font-semibold text-center mb-4"
+  >
+    Succesfully registered! <br />
+    Proceed to Login.
+  </h3>
+  <h3 v-if="error && !payload.email" class="text-l text-red-500 font-semibold text-center mb-4">
+    Email is already registered.
+  </h3>
   <form @submit.prevent="register">
     <div class="flex flex-col px-4 mb-4">
       <label for="email"> Email </label>
@@ -48,7 +63,7 @@ async function googleRegister(response: any): void {
     <div class="flex flex-col px-4 mb-4">
       <label for="pass"> Password </label>
       <input
-        v-model="payload.pass"
+        v-model="payload.password"
         type="password"
         id="pass"
         class="border-2 border-black rounded-lg h-8 p-2"

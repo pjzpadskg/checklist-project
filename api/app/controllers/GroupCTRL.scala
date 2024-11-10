@@ -10,6 +10,7 @@ import scala.concurrent.{ Future, ExecutionContext }
 
 import models.domain._
 import models.domain.Group._
+import models.domain.GroupWrite._
 import models.domain.GroupCreateForm._
 import models.domain.GroupDeleteForm._
 
@@ -23,7 +24,9 @@ extends BaseController with I18nSupport {
 
   def create() = Action.async { implicit request =>
       groupCreateForm.bindFromRequest().fold(
-        error => Future.successful(BadRequest(error.errorsAsJson)),
+        error => {
+          Future.successful(BadRequest(error.errorsAsJson))
+        },
         data => {
           val id = UUID.randomUUID()
           val owner = data.owner match {
@@ -40,7 +43,7 @@ extends BaseController with I18nSupport {
 
   def get() = Action.async { implicit request =>
       groupRepo.get(request.session.get("email").get).map {
-        data => Ok(Json.obj("groups" -> data))
+        data => Ok(Json.toJson(data.map(x => GroupWrite(x(0), x(1), x(2), x(3)))))
       }.recover{ case x: Exception => InternalServerError(x.getMessage) }
     }
 

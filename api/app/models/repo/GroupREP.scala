@@ -15,7 +15,8 @@ class GroupRepo @Inject()(dbcp: DatabaseConfigProvider)
   import profile.api._
 
   lazy val groups = TableQuery[GroupTable]
-
+  lazy val members = TableQuery[MemberTable]
+  lazy val users = TableQuery[UserTable]
   // CREATE A GROUP
   // - check if group name already exists in user context
   //   - if it exists, return false
@@ -32,10 +33,14 @@ class GroupRepo @Inject()(dbcp: DatabaseConfigProvider)
       }
     }
 
-  // GET OWNED GROUPS OF ONWER
+  // GET ALL GROUPS ASSOCIATED BY USER
 
-  def get(owner: String): Future[Seq[Group]] = db.run {
-      groups.filter(g => g.owner === owner).result
+  def get(user: String): Future[Seq[(UUID, String, String, String)]] = db.run {
+      members.filter(_.emailUser === user)
+        .join(groups).on(_.idGroup === _.id)
+        .join(users).on{ case ((m,g),u) => g.owner === u.email }
+        .map{ case ((m,g),u) => (g.id, g.name, g.owner, u.name) }
+        .result
     }
 
   // DELETE GROUP BY ID

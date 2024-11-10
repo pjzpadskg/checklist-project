@@ -21,3 +21,38 @@ export const ssoConfig = ref({
   size: `large`,
   shape: `pill`,
 })
+
+export function validate(input: string): boolean {
+  const s = input.trim()
+  if (s.length > 0) {
+    if (s.length === 1 && /(^[-!.?;,:'"}{)(*&^%$#@~><|/\\=+])/.test(s)) {
+      return false
+    }
+    return true
+  } else {
+    return false
+  }
+}
+
+export function buildTasks(tasks: Task[]): Task[] {
+  const taskMap: { [taskId: string]: Task } = {}
+  tasks.forEach((task) => {
+    task.subtasks = []
+    taskMap[task.taskId] = task
+  })
+
+  const rootTasks: Task[] = []
+
+  tasks.forEach((task) => {
+    if (!task.parentId) {
+      rootTasks.push(task)
+    } else {
+      const parentTask = taskMap[task.parentId]
+      if (parentTask) {
+        parentTask.subtasks?.push(task)
+      }
+    }
+  })
+
+  return rootTasks
+}

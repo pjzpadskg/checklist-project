@@ -9,34 +9,38 @@ import play.api.i18n.I18nSupport
 import scala.concurrent.{ Future, ExecutionContext }
 
 import models.domain._
-import models.domain.Invite._
 import models.domain.InviteWrite._
+import models.domain.InviteForm._
+import models.domain.InviteDeleteForm._
 
 import models.repo.InviteRepo
 
 @Singleton
-class MemberController @Inject()
+class InviteController @Inject()
 (val controllerComponents: ControllerComponents, inviteRepo: InviteRepo)
 (implicit ec: ExecutionContext)
 extends BaseController with I18nSupport {
-
-  def get(id: String) = Action.async { implicit request =>
-      inviteRepo.get(UUID.fromString(id))
-                .map(data => Ok(Json.obj("members" -> data)))
+  
+  def get() = Action.async { implicit request =>
+      inviteRepo.get(request.session.get("email").get)
+                .map(data => Ok(Json.toJson(data.map(
+                              d => InviteWrite(d(0),d(1),d(2),d(3),d(4),d(5))))))
+                .recover{ case x: Exception => InternalServerError(x.getMessage) }
     }
 
   def create() = Action.async { implicit request =>
-      inviteRepo.bindFromRequest().fold(
+      inviteForm.bindFromRequest().fold(
         error => Future.successful(BadRequest(error.errorsAsJson)),
-        data => memberRepo.add(Member(data.idGroup, data.emailUser, false))
+        data => inviteRepo.create(
+                Invite(UUID.randomUUID(), data.created, data.receiver, data.idGroup))
                           .map(count => Ok)
       ).recover{ case x: Exception => InternalServerError(x.getMessage) }
     }
 
   def delete() = Action.async { implicit request =>
-      inviteRepo.bindFromRequest().fold(
+      inviteDeleteForm.bindFromRequest().fold(
         error => Future.successful(BadRequest(error.errorsAsJson)),
-        data => memberRepo.delete(data).map(count => Ok)
+        data => inviteRepo.delete(data.id).map(count => Ok)
       ).recover{ case x: Exception => InternalServerError(x.getMessage) }
     }
 

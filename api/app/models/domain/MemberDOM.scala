@@ -17,6 +17,8 @@ object Member {
   }
 }
 
+/* write MemberWrites(idGroup, emailUser, nameUser, viewing) */
+
 final class MemberTable(t: Tag) extends Table[Member](t, "MEMBERS") {
   def idGroup = column[UUID]("ID_GROUP")
   def emailUser = column[String]("EMAIL_USER", O.Length(50))
@@ -24,13 +26,13 @@ final class MemberTable(t: Tag) extends Table[Member](t, "MEMBERS") {
   def * = (idGroup, emailUser, viewing).mapTo[Member]
 }
 
-case class MemberForm(idGroup: UUID, emailUser: String)
+case class MemberForm(idGroup: UUID, emailUser: Option[String])
 object MemberForm {
-  def unapply(m: MemberForm): Option[(UUID, String)] = Some(m.idGroup, m.emailUser)
+  def unapply(m: MemberForm): Option[(UUID, Option[String])] = Some(m.idGroup, m.emailUser)
   val memberForm: Form[MemberForm] = Form(
     mapping(
       "idGroup" -> uuid,
-      "emailUser" -> nonEmptyText
+      "emailUser" -> optional(text)
     )(MemberForm.apply)(MemberForm.unapply)
   )
 }

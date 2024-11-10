@@ -6,35 +6,51 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user.ts'
 
 const userStore = useUserStore()
+const router = useRouter()
+
+// When Authenticated
+// 1. Get all groups associated with user
+// 2. Make current view = “Personal Tasks”
+// 3. Get all tasks for “Personal Tasks”
+// 4. Go to User Board View
 
 const payload = ref({ email: '', password: '' })
-const { execute, error, data } = fetchApi('/users/sessions').post(payload)
+const { isFetching, execute, error, data } = fetchApi('/users/sessions').post(payload)
 async function login() {
-  // await execute()
+  await execute()
   if (!error.value) {
-    // userStore.name = JSON.parse(data.value).name
-    // userStore.isAuth = true
-    // fetch personal group
+    userStore.name = JSON.parse(data.value).name
+    userStore.isAuth = true
     payload.value = { email: '', password: '' }
-    useRouter().push('/home')
+    /* 1 */ await userStore.getGroups()
+    /* 2 */ userStore.currentView =
+      userStore.groups[userStore.groups.findIndex((g) => g.name === 'Personal Tasks')]
+    /* 3 */ // userStore.getTasks()
+    /* 4 */ router.push('/home')
   } else {
     console.log(error.value)
   }
+  payload.value.password = ''
 }
 
-async function googleLogin(response: any): void {
+async function googleLogin(response: { credential: string }): void {
   try {
     const { email, sub } = decodeCredential(response.credential)
     payload.value = { email, password: sub }
     await login()
   } catch (err) {
+    console.log(err)
     payload.value = { email: '', password: '' }
   }
 }
 </script>
 
 <template>
-  <h2 class="text-2xl font-semibold text-center">Login</h2>
+  <h2 class="text-3xl mb-4 font-semibold text-center">Login</h2>
+  <h3 v-if="isFetching" class="text-center mb-4">Hang on, we're setting things up for you.</h3>
+  <h3 v-if="error && !payload.password" class="text-l text-red-500 font-semibold text-center mb-4">
+    Incorrect email/password.
+  </h3>
   <form @submit.prevent="login">
     <div class="flex flex-col px-4 mb-4">
       <label for="email"> Email </label>
@@ -43,6 +59,7 @@ async function googleLogin(response: any): void {
         type="email"
         id="email"
         class="border-2 border-black rounded-lg h-8 p-2"
+        placeholder=""
         required
         autofocus
       />
@@ -51,7 +68,7 @@ async function googleLogin(response: any): void {
     <div class="flex flex-col px-4 mb-4">
       <label for="pass"> Password </label>
       <input
-        v-model="payload.pass"
+        v-model="payload.password"
         type="password"
         id="pass"
         class="border-2 border-black rounded-lg h-8 p-2"

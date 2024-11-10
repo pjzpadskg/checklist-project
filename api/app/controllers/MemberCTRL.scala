@@ -22,14 +22,22 @@ extends BaseController with I18nSupport {
 
   def get(id: String) = Action.async { implicit request =>
       memberRepo.get(UUID.fromString(id))
-                .map(data => Ok(Json.obj("members" -> data)))
+                .map(data => Ok(Json.toJson(data)))
+                .recover{ case x: Exception => InternalServerError(x.getMessage) }
     }
 
   def add() = Action.async { implicit request =>
       memberForm.bindFromRequest().fold(
-        error => Future.successful(BadRequest(error.errorsAsJson)),
-        data => memberRepo.add(Member(data.idGroup, data.emailUser, false))
-                          .map(count => Ok)
+        error => {
+          Future.successful(BadRequest(error.errorsAsJson))
+        },
+        data => {
+           val member = data.emailUser match {
+              case Some(x) => x
+              case _ => request.session.get("email").get
+            }
+            memberRepo.add(Member(data.idGroup, member, false)).map(count => Ok)
+        }
       ).recover{ case x: Exception => InternalServerError(x.getMessage) }
     }
 

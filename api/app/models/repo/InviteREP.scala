@@ -15,22 +15,27 @@ class InviteRepo @Inject()(dbcp: DatabaseConfigProvider)
   import profile.api._
 
   lazy val invites = TableQuery[InviteTable]
+  lazy val groups = TableQuery[GroupTable]
 
   // INVITES A USER TO A GROUP
 
-  def add(member: Member): Future[Int] = db.run { members += member }
+  def create(inv: Invite): Future[Int] = db.run { invites += inv }
 
   // GET INVITES OF A USER
 
-  def get(idGroup: UUID): Future[Seq[Member]] = db.run {
-      members.filter(m => m.idGroup === idGroup).result
+  def get(receiver: String): Future[Seq[(UUID, Long, String, UUID, String, String)]] = 
+    db.run {
+      invites.filter(_.receiver === receiver)
+            .join(groups)
+            .on(_.idGroup === _.id)
+            .map((i,g) => (i.id, i.created, i.receiver, g.id, g.name, g.owner))
+            .result
     }
 
   // DELETE OR RESOLVE INVITE
 
-  def delete(member: MemberForm): Future[Int] = db.run {
-      members.filter(m => m.idGroup === member.idGroup
-                       && m.emailUser === member.emailUser).delete
+  def delete(id: UUID): Future[Int] = db.run {
+      invites.filter(_.id === id).delete
     }
 
 }
