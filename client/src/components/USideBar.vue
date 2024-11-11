@@ -66,9 +66,9 @@ async function onChecklistAdd() {
           <span
             class="hover:cursor-pointer"
             @click="
-              showAddModal = !showAddModal
-              checklistName = ``
-              checklistErr = false
+              showAddModal = !showAddModal;
+              checklistName = ``;
+              checklistErr = false;
             "
           >
             ❌
